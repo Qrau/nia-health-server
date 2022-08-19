@@ -1,21 +1,30 @@
 const express = require("express");
 const router = require("./routes");
 const app = express();
+require("dotenv").config();
 const PORT = process.env.PORT || 8000;
 const mysql = require("mysql");
-require("dotenv").config();
-
-const connection = mysql.createConnection({
-  host: process.env.host,
-  user: process.env.user,
-  password: process.env.password,
-  database: process.env.database,
+const fs = require("fs");
+const readline = require("readline");
+const myCon = mysql.createConnection({
+  host: "localhost",
+  port: "3306",
+  database: "",
+  user: "",
+  password: "",
 });
-
-connection.connect((err) => {
-  if (err) throw err;
-  console.log("Connected to MySQL Server!");
-  const sql = "";
+const rl = readline.createInterface({
+  input: fs.createReadStream("./query.sql"),
+  terminal: false,
+});
+rl.on("line", function (chunk) {
+  myCon.query(chunk.toString("ascii"), function (err, sets, fields) {
+    if (err) console.log(err);
+  });
+});
+rl.on("close", function () {
+  console.log("finished");
+  myCon.end();
 });
 
 app.use(express.json());
