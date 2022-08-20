@@ -1,7 +1,6 @@
 const router = require("express").Router();
+const { getSurveyById } = require("./../controllers/survey.controllers");
 
-router.get("/", async (req, res, next) => {
-  console.log("anything");
-});
+router.get("/", getSurveyById);
 
 module.exports = router;
