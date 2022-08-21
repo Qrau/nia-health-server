@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const { getSurveyById } = require("./../controllers/survey.controllers");
 
-router.get("/", getSurveyById);
+router.get("/id/:id", getSurveyById);
 
 module.exports = router;

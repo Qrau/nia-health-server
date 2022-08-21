@@ -17,48 +17,6 @@ CREATE SCHEMA IF NOT EXISTS `db_nia_health` DEFAULT CHARACTER SET utf8 ;
 USE `db_nia_health` ;
 
 -- -----------------------------------------------------
--- Table `db_nia_health`.`assessment`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_nia_health`.`assessment` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `participant_id` INT NOT NULL,
-  `assessment_type_id` INT NOT NULL,
-  `date` DATE NOT NULL,
-  `content` VARCHAR(600) NOT NULL,
-  `survey_id` INT NOT NULL,
-  PRIMARY KEY (`id`),
-  INDEX `assessment_patient_idx` (`participant_id` ASC) ,
-  INDEX `assessment_type_idx` (`assessment_type_id` ASC) ,
-  INDEX `assessment_survey_idx` (`survey_id` ASC) ,
-  CONSTRAINT `assessment_participant`
-    FOREIGN KEY (`participant_id`)
-    REFERENCES `db_nia_health`.`participant` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `assessment_type`
-    FOREIGN KEY (`assessment_type_id`)
-    REFERENCES `db_nia_health`.`assessment_type` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `assessment_survey`
-    FOREIGN KEY (`survey_id`)
-    REFERENCES `db_nia_health`.`survey` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `db_nia_health`.`assessment_type`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_nia_health`.`assessment_type` (
-  `id` INT NOT NULL,
-  `label` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
 -- Table `db_nia_health`.`assessor`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `db_nia_health`.`assessor` (
@@ -74,19 +32,19 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `db_nia_health`.`assessor_notes` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `assessor_id` INT NOT NULL,
-  `assessment_id` INT NOT NULL,
+  `participant_answer_id` INT NOT NULL,
   `content` VARCHAR(600) NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX `user_note_assessment_idx` (`assessment_id` ASC) ,
   INDEX `user_note_user_idx` (`assessor_id` ASC) ,
+  INDEX `assessor_notes_assessment_idx` (`participant_answer_id` ASC) ,
   CONSTRAINT `assessor_notes_assessor`
     FOREIGN KEY (`assessor_id`)
     REFERENCES `db_nia_health`.`assessor` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `assessor_notes_assessment`
-    FOREIGN KEY (`assessment_id`)
-    REFERENCES `db_nia_health`.`assessment` (`id`)
+    FOREIGN KEY (`participant_answer_id`)
+    REFERENCES `db_nia_health`.`participant_answer` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -116,17 +74,17 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `db_nia_health`.`images`
+-- Table `db_nia_health`.`attachment`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `db_nia_health`.`images` (
-  `id` INT NOT NULL,
+CREATE TABLE IF NOT EXISTS `db_nia_health`.`attachment` (
+  `id` INT NOT NULL AUTO_INCREMENT,
   `url` VARCHAR(250) NOT NULL,
-  `assessment_id` INT NOT NULL,
+  `participant_answer_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX `assessment_image_idx` (`assessment_id` ASC) ,
-  CONSTRAINT `assessment_image`
-    FOREIGN KEY (`assessment_id`)
-    REFERENCES `db_nia_health`.`assessment` (`id`)
+  INDEX `participant_answer_attachment_idx` (`participant_answer_id` ASC) ,
+  CONSTRAINT `attachment_participant_answer`
+    FOREIGN KEY (`participant_answer_id`)
+    REFERENCES `db_nia_health`.`participant_answer` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -150,6 +108,9 @@ CREATE TABLE IF NOT EXISTS `db_nia_health`.`participant_answer` (
   `participant_id` INT NOT NULL,
   `question_id` INT NOT NULL,
   `possible_answer_id` INT NOT NULL,
+  `chosen_answer` INT NOT NULL,
+  `date` DATE NOT NULL,
+  `attachment` INT NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `participant_answer_participant_idx` (`participant_id` ASC) ,
   INDEX `participant_answer_question_idx` (`question_id` ASC) ,
@@ -181,7 +142,7 @@ CREATE TABLE IF NOT EXISTS `db_nia_health`.`possible_answer` (
   `content` VARCHAR(600) NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `answer_question_idx` (`question_id` ASC) ,
-  CONSTRAINT `answer_question`
+  CONSTRAINT `possible_answer_question`
     FOREIGN KEY (`question_id`)
     REFERENCES `db_nia_health`.`question` (`id`)
     ON DELETE NO ACTION
@@ -195,15 +156,31 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `db_nia_health`.`question` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `survey_id` INT NOT NULL,
-  `question_type` VARCHAR(45) NOT NULL,
+  `question_type_id` INT NOT NULL,
   `question_content` VARCHAR(155) NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `question_survey_idx` (`survey_id` ASC) ,
+  INDEX `assessment_type_idx` (`question_type_id` ASC) ,
   CONSTRAINT `question_survey`
     FOREIGN KEY (`survey_id`)
     REFERENCES `db_nia_health`.`survey` (`id`)
     ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `question_question_type`
+    FOREIGN KEY (`question_type_id`)
+    REFERENCES `db_nia_health`.`question_type` (`id`)
+    ON DELETE NO ACTION
     ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `db_nia_health`.`question_type`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `db_nia_health`.`question_type` (
+  `id` INT NOT NULL,
+  `label` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`id`))
 ENGINE = InnoDB;
 
 
@@ -221,14 +198,15 @@ SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 
+
 -- -----------------------------------------------------
 -- Custom Queries `db_nia_health`
 -- -----------------------------------------------------
 INSERT IGNORE INTO `survey` SET `id` = 1, `label` = 'Sleep and Skin conditions Survey';
-INSERT IGNORE INTO `assessment_type` SET `id` = 1, `label` = 'flare_up';
-INSERT IGNORE INTO `assessment_type` SET `id` = 2, `label` = 'skin_health';
-INSERT IGNORE INTO `question` SET `id` = 1, `question_content` = 'How was your sleep last night ?', `survey_id` = 1, `question_type` = 'flare_up';
-INSERT IGNORE INTO `question` SET `id` = 2, `question_content` = 'How good is your skin condition ?', `survey_id` = 1, `question_type` = 'skin_health';
+INSERT IGNORE INTO `question_type` SET `id` = 1, `label` = 'flare_up';
+INSERT IGNORE INTO `question_type` SET `id` = 2, `label` = 'skin_health';
+INSERT IGNORE INTO `question` SET `id` = 1, `question_content` = 'How was your sleep last night ?', `survey_id` = 1, `question_type_id` = 1;
+INSERT IGNORE INTO `question` SET `id` = 2, `question_content` = 'How good is your skin condition ?', `survey_id` = 1, `question_type_id` = 2;
 INSERT IGNORE INTO `possible_answer` SET `id` = 1, `question_id`=1, `content` = '[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]';
 INSERT IGNORE INTO `possible_answer` SET `id` = 2, `question_id`=2, `content` = '[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]';
 INSERT IGNORE INTO `assessor` SET `id` = 1, `username` = 'test_assesor';
