@@ -219,4 +219,7 @@ INSERT IGNORE INTO `possible_answer` SET `id` = 2, `question_id`=2, `content` = 
 INSERT IGNORE INTO `assessor` SET `id` = 1, `username` = 'test_assesor';
 INSERT IGNORE INTO `participant` SET `id` = 1, `username` = 'test_participant';
 
+
+
+
 -- SELECT * FROM attachment JOIN participant_answer ON participant_answer.attachment = attachment.id WHERE participant_answer.date = 1;
