@@ -108,13 +108,14 @@ CREATE TABLE IF NOT EXISTS `db_nia_health`.`participant_answer` (
   `participant_id` INT NOT NULL,
   `question_id` INT NOT NULL,
   `possible_answer_id` INT NOT NULL,
+  `attachment_id` INT NOT NULL,
   `chosen_answer` INT NOT NULL,
   `date` DATE NOT NULL,
-  `attachment` INT NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `participant_answer_participant_idx` (`participant_id` ASC) ,
   INDEX `participant_answer_question_idx` (`question_id` ASC) ,
   INDEX `participant_answer_possible_answer_idx` (`possible_answer_id` ASC) ,
+  INDEX `participant_answer_attachment_idx` (`attachment_id` ASC) ,
   CONSTRAINT `participant_answer_participant`
     FOREIGN KEY (`participant_id`)
     REFERENCES `db_nia_health`.`participant` (`id`)
@@ -128,6 +129,11 @@ CREATE TABLE IF NOT EXISTS `db_nia_health`.`participant_answer` (
   CONSTRAINT `participant_answer_possible_answer`
     FOREIGN KEY (`possible_answer_id`)
     REFERENCES `db_nia_health`.`possible_answer` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `participant_answer_attachment`
+    FOREIGN KEY (`attachment_id`)
+    REFERENCES `db_nia_health`.`attachment` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -199,6 +205,7 @@ SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 
 
+
 -- -----------------------------------------------------
 -- Custom Queries `db_nia_health`
 -- -----------------------------------------------------
@@ -212,3 +219,7 @@ INSERT IGNORE INTO `possible_answer` SET `id` = 2, `question_id`=2, `content` = 
 INSERT IGNORE INTO `assessor` SET `id` = 1, `username` = 'test_assesor';
 INSERT IGNORE INTO `participant` SET `id` = 1, `username` = 'test_participant';
 
+
+
+
+-- SELECT * FROM attachment JOIN participant_answer ON participant_answer.attachment = attachment.id WHERE participant_answer.date = 1;

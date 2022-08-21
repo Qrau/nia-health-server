@@ -5,8 +5,10 @@ const fs = require("fs");
 const bodyParser = require("body-parser");
 const path = require("path");
 const db = require("./db");
+const cors = require("cors");
 
 const app = express();
+app.use(cors());
 const PORT = process.env.PORT || 8000;
 
 app.use(bodyParser.urlencoded({ extended: false }));
